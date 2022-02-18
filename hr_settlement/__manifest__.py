@@ -22,5 +22,5 @@
         'data/hr_settlement_sequence.xml',
         'report/settlement_report.xml',
     ],
-
+    "installable": True,
 }
