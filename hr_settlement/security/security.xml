@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--    groups  -->
+    <record model="ir.module.category" id="hr_settlement_category">
+        <field name="name">Settlement</field>
+        <field name="description">Category For Settlement</field>
+    </record>
+
+    <record id="settlement_manager_group" model="res.groups">
+        <field name="name">Settlement Manager</field>
+        <field name="category_id" ref="hr_settlement_category"/>
+    </record>
+
+    <record id="settlement_employee_group" model="res.groups">
+        <field name="name">Settlement Employee</field>
+        <field name="category_id" ref="hr_settlement_category"/>
+    </record>
+
+    <record id="settlement_hr_approve_group" model="res.groups">
+        <field name="name">Settlement HR Approve</field>
+        <field name="category_id" ref="hr_settlement_category"/>
+    </record>
+
+    <record id="settlement_finance_approve_group" model="res.groups">
+        <field name="name">Settlement Finance Approve</field>
+        <field name="category_id" ref="hr_settlement_category"/>
+    </record>
+
+    <!--Record Rules-->
+    <record model="ir.rule" id="manager_see_all_settlement">
+        <field name="name">Manager See All Settlement</field>
+        <field name="model_id" ref="model_hr_settlement"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('settlement_manager_group'))]"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+        <field name="perm_read" eval="1"/>
+    </record>
+
+    <record model="ir.rule" id="employee_see_his_settlement_only">
+        <field name="name">Employee See His Settlement Only</field>
+        <field name="model_id" ref="model_hr_settlement"/>
+        <field name="domain_force">[('user_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('settlement_employee_group'))]"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="perm_read" eval="1"/>
+    </record>
+
+</odoo>

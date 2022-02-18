@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <report
+                id="hr_settlement_report"
+                model="hr.settlement"
+                report_type="qweb-pdf"
+                string="Settlement"
+                name="hr_settlement.report_settlement_template"
+                file="hr_settlement.report_settlement_template"
+        />
+
+        <template id="report_settlement_template">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.html_container">
+                        <div class="page">
+                            <h1 class="text-center">
+                                <strong style="text-decoration: underline;">Settlement</strong>
+                            </h1>
+                            <br/>
+                            <br/>
+
+                            <!--Row 1 -->
+                            <div class="row">
+                                <div class="col-7 ml-5">
+                                    <strong size="7">Settlement Number:</strong>
+                                    <span t-field="o.settlement_code"/>
+                                    <br/>
+                                    <strong size="4">Employee:</strong>
+                                    <span t-field="o.employee_id.name"/>
+                                    <br/>
+                                    <strong size="4">Employee code:</strong>
+                                    <span t-field="o.employee_code"/>
+                                    <br/>
+                                    <strong size="4">Department:</strong>
+                                    <span t-field="o.department_id.name"/>
+                                    <br/>
+                                    <strong size="4">Jop Position:</strong>
+                                    <span t-field="o.job_id.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <strong size="4">Status:</strong>
+                                    <span t-field="o.state"/>
+                                    <br/>
+                                    <strong size="4">TimeOff Request:</strong>
+                                    <span t-field="o.timeoff_request.name"/>
+                                    <br/>
+                                    <strong size="4">TimeOff Request Days:</strong>
+                                    <span t-field="o.timeoff_request_days"/>
+                                    <br/>
+                                    <strong size="4">TimeOff Balance:</strong>
+                                    <span t-field="o.timeoff_balance"/>
+                                    <br/>
+                                    <strong size="4">Days To Reconcile:</strong>
+                                    <span t-field="o.days_to_reconcile"/>
+                                    <br/>
+                                </div>
+                            </div>
+                            <br/>
+                            <!--Row 2-->
+                            <div class="row">
+                                <div class="col-7 ml-5">
+                                    <strong size="4">Journal:</strong>
+                                    <span t-field="o.journal_entry_id.name"/>
+                                    <br/>
+                                    <strong size="4">Payment:</strong>
+                                    <span t-field="o.payment_id.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <strong size="7">Settlement Days:</strong>
+                                    <span t-field="o.settlement_days"/>
+                                    <br/>
+                                    <strong size="4">Leave Amount:</strong>
+                                    <span t-esc="o.leave_amount"/>
+                                    <br/>
+                                    <strong size="4">Ticket Amount:</strong>
+                                    <span t-field="o.ticket_amount"/>
+                                    <br/>
+                                    <strong size="4">Total Amount:</strong>
+                                    <span t-field="o.total_amount"/>
+                                </div>
+                            </div>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <!--row 3-->
+                            <div class="row">
+                                <div class="col-7 ml-5">
+                                    <strong size="4">Note:</strong>
+                                    <span t-field="o.note"/>
+                                    <br/>
+                                    <strong size="4">Approved By:</strong>
+                                    <span t-field="o.approved_by.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <br/>
+                                    <strong size="4">Approved Date:</strong>
+                                    <span t-field="o.approved_date"/>
+                                </div>
+                            </div>
+
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

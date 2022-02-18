@@ -1,0 +1,120 @@
+<odoo>
+
+    <!--    settlement tree view -->
+    <record id="hr_settlement_tree_view" model="ir.ui.view">
+        <field name="name">hr.settlement.tree.view</field>
+        <field name="model">hr.settlement</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="settlement_code"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="job_id"/>
+                <field name="application_date"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!--    settlement form view  -->
+    <record id="hr_settlement_form_view" model="ir.ui.view">
+        <field name="name">hr.settlement.form.view</field>
+        <field name="model">hr.settlement</field>
+        <field name="arch" type="xml">
+            <form string="Settlement">
+                <header>
+                    <button name="button_submit" states="draft" string="Submit" groups="base.group_user"
+                            class="oe_highlight" type="object"/>
+                    <button name="button_hr_approve" states="submit" string="HR Approve"
+                            groups="hr_settlement.settlement_hr_approve_group,hr_settlement.settlement_manager_group"
+                            class="oe_highlight" type="object"/>
+                    <button name="button_finance_approve" states="hr_approve" string="Finance Approve"
+                            groups="hr_settlement.settlement_finance_approve_group,hr_settlement.settlement_manager_group"
+                            class="oe_highlight"
+                            type="object"/>
+                    <button name="button_cancel" states="submit,hr_approve" string="Cancel" type="object"
+                            groups="base.group_user"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submit,hr_approve,issued,paid,cancel"/>
+                </header>
+
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button name="open_settlement_journal_entry" type="object"
+                                class="oe_stat_button" icon="fa-paperclip"
+                                string="Journal Entry"
+                                attrs="{'invisible': [('state', 'in', ('draft', 'submit'))]}"
+                        />
+                        <button name="open_settlement_payment" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                string="Payment"
+                                attrs="{'invisible': [('state', 'in', ('draft', 'submit'))]}"
+                        />
+                    </div>
+
+                    <h1>
+                        <field name="settlement_code"/>
+                    </h1>
+                    <group>
+                        <group String="Employee Information">
+                            <field name="employee_id"/>
+                            <field name="employee_code"/>
+                            <field name="contract_id"/>
+                            <field name="company_id"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                        </group>
+                        <group String="Settlement Information">
+                            <field name="application_date"/>
+                            <field name="settlement_for"/>
+                            <field name="timeoff_request"/>
+                            <field name="timeoff_request_days"/>
+                            <field name="timeoff_balance"/>
+                            <field name="days_to_reconcile"/>
+                            <!--                            <field name="reconcile_date"/>-->
+                        </group>
+                        <group String="Settlement Computation">
+                            <field name="settlement_days"/>
+                            <field name="leave_amount"/>
+                            <field name="ticket_amount"/>
+                            <field name="total_amount"/>
+                        </group>
+                        <group string="Approved Info"
+                               attrs="{'invisible': [('state', 'not in', ('hr_approve','finance_approve'))]}">
+                            <field name="approved_by"
+                                   attrs="{'required': [('state', 'in', ('hr_approve','finance_approve'))]}"/>
+                            <field name="approved_date"
+                                   attrs="{'required': [('state', 'in', ('hr_approve','finance_approve'))]}"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!--    Settlement Action  -->
+    <record id="hr_settlement_action" model="ir.actions.act_window">
+        <field name="name">Settlement</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.settlement</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create new Settlement
+            </p>
+        </field>
+    </record>
+
+    <!--Settlement Menus -->
+    <menuitem id="hr_settlement_menu_root" name="Settlement" web_icon="hr_settlement,static/description/icon.png"
+              groups="hr_settlement.settlement_manager_group,hr_settlement.settlement_employee_group"/>
+    <menuitem id="hr_settlement_menu_parent" parent="hr_settlement_menu_root" action="hr_settlement_action"
+              groups="hr_settlement.settlement_manager_group,hr_settlement.settlement_employee_group"/>
+</odoo>
