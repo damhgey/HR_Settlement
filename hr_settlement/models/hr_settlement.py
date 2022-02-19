@@ -54,14 +54,17 @@ class HrSettlement(models.Model):
     # settlements information
     settlement_for = fields.Selection([('timeoff_request', 'Time Off Request'),
                                        ('timeoff_balance', 'Time Off Balance'),
-                                       ('both', 'Both'), ],
+                                       ('both', 'Both')], readonly=True,
+                                      states={'draft': [('readonly', False)]},
                                       string="Settlement For", required=True)
     timeoff_request = fields.Many2one(comodel_name="hr.leave", string="Time Off Request",
-                                      domain=get_time_off_requests_domain)
+                                      domain=get_time_off_requests_domain, readonly=True,
+                                      states={'draft': [('readonly', False)]}, )
     timeoff_request_days = fields.Float(comodel_name="hr.leave", string="Time Off Request Days",
                                         related='timeoff_request.number_of_days')
     timeoff_balance = fields.Float(string="Time Off Balance", compute='_compute_timeoff_balance')
-    days_to_reconcile = fields.Float(string="Days To Reconcile", required=False, )
+    days_to_reconcile = fields.Float(string="Days To Reconcile", required=False, readonly=True,
+                                     states={'draft': [('readonly', False)]})
     remaining_days = fields.Float(string="Remaining Days", compute='_compute_remaining_days')
     show_timeoff_request = fields.Boolean(string="", )
     show_timeoff_balance = fields.Boolean(string="", )
