@@ -28,11 +28,17 @@
                     <button name="button_hr_approve" states="submit" string="HR Approve"
                             groups="hr_settlement.settlement_hr_approve_group,hr_settlement.settlement_manager_group"
                             class="oe_highlight" type="object"/>
-                    <button name="button_finance_approve" states="hr_approve" string="Finance Approve"
+                    <button name="button_create_journal" states="hr_approve" string="Create Journal Entry"
                             groups="hr_settlement.settlement_finance_approve_group,hr_settlement.settlement_manager_group"
                             class="oe_highlight"
                             type="object"/>
-                    <button name="button_cancel" states="submit,hr_approve" string="Cancel" type="object"
+                    <button name="button_register_payment" states="issued" string="Register Payment"
+                            groups="hr_settlement.settlement_finance_approve_group,hr_settlement.settlement_manager_group"
+                            class="oe_highlight"
+                            type="object"/>
+                    <button name="reset_to_draft" states="submit,hr_approve" string="Reset To Draft" type="object"
+                            groups="base.group_user"/>
+                    <button name="button_cancel" states="submit,hr_approve,issued" string="Cancel" type="object"
                             groups="base.group_user"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,submit,hr_approve,issued,paid,cancel"/>
@@ -68,11 +74,14 @@
                         <group String="Settlement Information">
                             <field name="application_date"/>
                             <field name="settlement_for"/>
-                            <field name="timeoff_request"/>
-                            <field name="timeoff_request_days"/>
-                            <field name="timeoff_balance"/>
-                            <field name="days_to_reconcile"/>
-                            <!--                            <field name="reconcile_date"/>-->
+                            <field name="timeoff_request" attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="timeoff_request_days" attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="timeoff_balance" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="days_to_reconcile" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="remaining_days" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="show_timeoff_request" invisible="1"/>
+                            <field name="show_timeoff_balance" invisible="1"/>
+                            <field name="show_both" invisible="1"/>
                         </group>
                         <group String="Settlement Computation">
                             <field name="settlement_days"/>

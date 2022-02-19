@@ -12,7 +12,7 @@
 
     'version': '0.1',
 
-    'depends': ['base', 'hr'],
+    'depends': ['base', 'hr', 'hr_contract_update'],
 
     'data': [
         'security/security.xml',

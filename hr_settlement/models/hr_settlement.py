@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -23,7 +23,9 @@ class HrSettlement(models.Model):
         for rec in self:
             rec.timeoff_request = False
             return {'domain': {
-                'timeoff_request': [('employee_id', '=', rec.employee_id.id), ('is_reconcile', '=', False)]}}
+                'timeoff_request': [('employee_id', '=', rec.employee_id.id), ('is_reconcile', '=', False),
+                                    ('holiday_status_id.work_entry_type_id.code', '=', 'LEAVE120'),
+                                    ('state', '=', 'validate')]}}
 
     settlement_code = fields.Char(string="Settlement No", readonly=True, default='Settlement')
     application_date = fields.Date('Application Date', required=True, default=fields.Date.today(), readonly=True,
@@ -31,7 +33,6 @@ class HrSettlement(models.Model):
     state = fields.Selection([('draft', 'Draft'),
                               ('submit', 'submitted'),
                               ('hr_approve', 'HR Approve'),
-                              ('finance_approve', 'Finance Approve'),
                               ('issued', 'Issued'),
                               ('paid', 'Paid'),
                               ('cancel', 'Cancelled')],
@@ -54,20 +55,23 @@ class HrSettlement(models.Model):
     settlement_for = fields.Selection([('timeoff_request', 'Time Off Request'),
                                        ('timeoff_balance', 'Time Off Balance'),
                                        ('both', 'Both'), ],
-                                      string="Settlement For")
+                                      string="Settlement For", required=True)
     timeoff_request = fields.Many2one(comodel_name="hr.leave", string="Time Off Request",
                                       domain=get_time_off_requests_domain)
     timeoff_request_days = fields.Float(comodel_name="hr.leave", string="Time Off Request Days",
                                         related='timeoff_request.number_of_days')
-    timeoff_balance = fields.Float(string="Time Off Balance", required=False)
+    timeoff_balance = fields.Float(string="Time Off Balance", compute='_compute_timeoff_balance')
     days_to_reconcile = fields.Float(string="Days To Reconcile", required=False, )
-    reconcile_date = fields.Date(string="Reconcile Date", required=True, default=fields.Date.today())
+    remaining_days = fields.Float(string="Remaining Days", compute='_compute_remaining_days')
+    show_timeoff_request = fields.Boolean(string="", )
+    show_timeoff_balance = fields.Boolean(string="", )
+    show_both = fields.Boolean(string="", )
 
     # settlement computation
-    settlement_days = fields.Float(string="Settlement Days", readonly=True, )
-    leave_amount = fields.Float(string="Leave Amount", readonly=True, )
-    ticket_amount = fields.Float(string="Ticket Amount", readonly=True, )
-    total_amount = fields.Float(string="Ticket Amount", readonly=True, )
+    settlement_days = fields.Float(string="Settlement Days", compute='_compute_settlement_days')
+    leave_amount = fields.Float(string="Leave Amount", compute='_compute_leave_amount')
+    ticket_amount = fields.Float(string="Ticket Amount", compute='_compute_ticket_amount')
+    total_amount = fields.Float(string="Total Amount", compute='_compute_total_amount')
 
     # approved data
     approved_by = fields.Many2one(comodel_name="res.users", string="Approved By", required=False)
@@ -81,6 +85,7 @@ class HrSettlement(models.Model):
     def create(self, vals):
         settlement_code = self.env['ir.sequence'].get('hr.settlement.code')
         vals['settlement_code'] = settlement_code
+
         return super(HrSettlement, self).create(vals)
 
     def button_submit(self):
@@ -89,11 +94,89 @@ class HrSettlement(models.Model):
     def button_hr_approve(self):
         self.state = 'hr_approve'
 
-    def button_finance_approve(self):
-        self.state = 'finance_approve'
+    def button_create_journal(self):
+        self.state = 'issued'
+
+    def button_register_payment(self):
+        self.state = 'paid'
+
+    def reset_to_draft(self):
+        self.state = 'draft'
 
     def button_cancel(self):
         self.state = 'cancel'
+
+    # onchange settlement information fields visibility
+    @api.onchange('settlement_for')
+    def onchange_settlement_for(self):
+        if self.settlement_for == 'timeoff_request':
+            self.show_timeoff_balance = False
+            self.show_both = False
+            self.show_timeoff_request = True
+        if self.settlement_for == 'timeoff_balance':
+            self.show_timeoff_request = False
+            self.show_both = False
+            self.show_timeoff_balance = True
+        if self.settlement_for == 'both':
+            self.show_both = True
+
+    @api.depends('employee_id', 'settlement_for')
+    def _compute_timeoff_balance(self):
+        leave_report = self.env['hr.leave.report']
+        for rec in self:
+            paid_timeoff_days = leave_report.search(
+                [('employee_id', '=', rec.employee_id.id),
+                 ('holiday_status_id.work_entry_type_id.code', '=', 'LEAVE120'),
+                 ('state', '=', 'validate')]).mapped('number_of_days')
+            timeoff_balance = sum(paid_timeoff_days)
+            if paid_timeoff_days:
+                rec.timeoff_balance = timeoff_balance
+            else:
+                rec.timeoff_balance = 0
+
+    @api.depends('timeoff_balance', 'days_to_reconcile')
+    def _compute_remaining_days(self):
+        for rec in self:
+            rec.remaining_days = rec.timeoff_balance - rec.days_to_reconcile
+
+    @api.onchange('timeoff_balance', 'days_to_reconcile')
+    def check_days_to_reconcile(self):
+        if self.days_to_reconcile > self.timeoff_balance:
+            raise UserError(_('You cannot reconcile days more than your balance days.'))
+
+    @api.depends('settlement_for', 'timeoff_request_days', 'days_to_reconcile')
+    def _compute_settlement_days(self):
+        for rec in self:
+            if rec.settlement_for == 'timeoff_request':
+                rec.settlement_days = rec.timeoff_request_days
+            elif rec.settlement_for == 'timeoff_balance':
+                rec.settlement_days = rec.days_to_reconcile
+            elif rec.settlement_for == 'both':
+                rec.settlement_days = rec.timeoff_request_days + rec.days_to_reconcile
+            else:
+                rec.settlement_days = 0.0
+
+    def _compute_leave_amount(self):
+        for rec in self:
+            if rec.contract_id:
+                total_salary = rec.contract_id.total_salary
+                settlement_days = rec.settlement_days
+                leave_amount = total_salary / 30 * settlement_days
+                rec.leave_amount = leave_amount
+            else:
+                rec.leave_amount = 0.0
+
+    def _compute_ticket_amount(self):
+        for rec in self:
+            if rec.contract_id:
+                if rec.settlement_for == 'timeoff_request' or rec.settlement_for == 'both':
+                    rec.ticket_amount = rec.contract_id.travel_ticket_amount
+                else:
+                    rec.ticket_amount = 0.0
+
+    def _compute_total_amount(self):
+        for rec in self:
+            rec.total_amount = sum([rec.leave_amount, rec.ticket_amount])
 
     def open_settlement_journal_entry(self):
         return {
