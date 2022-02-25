@@ -9,6 +9,18 @@
                 <field name="is_reconcile"/>
             </xpath>
 
+            <xpath expr="//header" position="inside">
+                <button name="reconcile_timeoff" string="Reconcile It"
+                        attrs="{'invisible': ['|', ('state', 'not in', 'validate'), ('settlement_id', '!=', False)]}"
+                        groups="hr_settlement.settlement_manager_group"
+                        class="oe_highlight"
+                        type="object"/>
+            </xpath>
+
+            <xpath expr="//field[@name='is_reconcile']" position="after">
+                <field name="settlement_id" attrs="{'invisible': [('settlement_id', '=', False)]}"/>
+            </xpath>
+
         </field>
     </record>
 </odoo>
