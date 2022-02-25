@@ -1,0 +1,64 @@
+<odoo>
+    <!--    settlement journal config tree view -->
+    <record id="settlement_journal_config_tree_view" model="ir.ui.view">
+        <field name="name">settlement.journal.config.tree.view</field>
+        <field name="model">settlement.journal.config</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="journal_id"/>
+                <field name="leave_debit_account_id"/>
+                <field name="ticket_debit_account_it"/>
+                <field name="total_credit_account_id"/>
+                <field name="active_rec"/>
+            </tree>
+        </field>
+    </record>
+
+    <!--    settlement journal config form view  -->
+    <record id="settlement_journal_config_form_view" model="ir.ui.view">
+        <field name="name">settlement.journal.config.form.view</field>
+        <field name="model">settlement.journal.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="active_rec"/>
+                        </group>
+                        <group>
+                            <field name="leave_debit_account_id"/>
+                            <field name="ticket_debit_account_it"/>
+                            <field name="total_credit_account_id"/>
+                            <field name="journal_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--    settlement journal config Action  -->
+    <record id="settlement_journal_config_action" model="ir.actions.act_window">
+        <field name="name">Settlement Journal Configuration</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">settlement.journal.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add Settlement Journal configuration
+            </p>
+        </field>
+    </record>
+
+    <!--settlement journal config Menus -->
+    <menuitem id="settlement_configuration_menu_parent" parent="hr_settlement_menu_root" name="Configuration"
+              groups="hr_settlement.settlement_manager_group,hr_settlement.settlement_employee_group"/>
+    <menuitem id="settlement_journal_config_menu" parent="settlement_configuration_menu_parent"
+              action="settlement_journal_config_action"
+              groups="hr_settlement.settlement_manager_group,hr_settlement.settlement_employee_group"/>
+    <!-- This Menu Item Must have a parent -->
+</odoo>

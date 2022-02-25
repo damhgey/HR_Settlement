@@ -19,6 +19,7 @@
         'security/ir.model.access.csv',
         'views/settlement.xml',
         'views/hr_leave_view.xml',
+        'views/settlement_journal_config.xml',
         'data/hr_settlement_sequence.xml',
         'report/settlement_report.xml',
     ],

@@ -76,6 +76,8 @@ class HrSettlement(models.Model):
     ticket_amount = fields.Float(string="Ticket Amount", compute='_compute_ticket_amount')
     total_amount = fields.Float(string="Total Amount", compute='_compute_total_amount')
 
+    reconcile_allocation_id = fields.Many2one(comodel_name="hr.leave.allocation", string="Reconciled Allocation")
+
     # approved data
     approved_by = fields.Many2one(comodel_name="res.users", string="Approved By", required=False)
     approved_date = fields.Date(string="Approved Date", required=False, )
@@ -98,15 +100,51 @@ class HrSettlement(models.Model):
         self.state = 'hr_approve'
 
     def button_create_journal(self):
+        self.ensure_one()
+        # create journal entry
+        move_vals = self.prepare_move_data()
+        move_id = self.env['account.move'].create(move_vals)
+        move_id.action_post()
+        self.write({'journal_entry_id': move_id})
+
+        # create negative allocation if settlement for balance or both
+        self.create_negative_allocation()
+
+        # update timeoff if settlement for balance or both
+        if self.settlement_for in ['timeoff_request', 'both'] and self.timeoff_request:
+            self.timeoff_request.write({'is_reconcile': True})
+
         self.state = 'issued'
 
+    # open register payment wizard
     def button_register_payment(self):
-        self.state = 'paid'
+        return {
+            'name': _('Register Payment'),
+            'res_model': 'account.payment.register',
+            'view_mode': 'form',
+            'context': {
+                'settlement': True,
+                'settlement_id': self.id,
+                'active_model': 'account.move',
+                'active_ids': self.journal_entry_id.id,
+            },
+            'target': 'new',
+            'type': 'ir.actions.act_window',
+        }
 
     def reset_to_draft(self):
         self.state = 'draft'
 
     def button_cancel(self):
+
+        # cancel journal entry if exist
+        if self.journal_entry_id:
+            self.journal_entry_id.button_draft()
+            self.journal_entry_id.button_cancel()
+
+        # cancel reconcile allocation if exist
+        if self.reconcile_allocation_id:
+            self.reconcile_allocation_id.action_refus()
         self.state = 'cancel'
 
     # onchange settlement information fields visibility
@@ -180,6 +218,66 @@ class HrSettlement(models.Model):
     def _compute_total_amount(self):
         for rec in self:
             rec.total_amount = sum([rec.leave_amount, rec.ticket_amount])
+
+    def prepare_move_data(self):
+        settlement_accounts = self.env['settlement.journal.config'].search([('active_rec', '=', True)], limit=1)
+        if not settlement_accounts:
+            raise ValidationError(_("Please set the configuration for settlement journal Entry"))
+        else:
+            # Prepare Move lines (journal item)
+            line_vals = []
+            if self.leave_amount != 0:
+                line_vals.append(
+                    {
+                        'name': 'Leave',
+                        'account_id': settlement_accounts.leave_debit_account_id.id,
+                        'partner_id': self.employee_id.address_home_id.id,
+                        'debit': self.leave_amount,
+                        'credit': 0.0
+                    })
+            if self.ticket_amount != 0:
+                line_vals.append(
+                    {
+                        'name': 'Ticket',
+                        'account_id': settlement_accounts.ticket_debit_account_it.id,
+                        'partner_id': self.employee_id.address_home_id.id,
+                        'debit': self.ticket_amount,
+                        'credit': 0.0
+                    })
+            if self.total_amount != 0:
+                line_vals.append(
+                    {
+                        'name': 'Total',
+                        'account_id': settlement_accounts.total_credit_account_id.id,
+                        'partner_id': self.employee_id.address_home_id.id,
+                        'debit': 0.0,
+                        'credit': self.total_amount
+                    })
+            # Set journal entry data
+            move_data = {
+                'ref': self.settlement_code,
+                'move_type': 'entry',
+                'journal_id': settlement_accounts.journal_id.id,
+                'date': fields.Date.today(),
+                'line_ids': [(0, 0, line) for line in line_vals],
+            }
+            return move_data
+
+    def create_negative_allocation(self):
+        self.ensure_one()
+        if self.settlement_for in ['timeoff_balance', 'both'] and self.days_to_reconcile:
+            time0ff_type = self.env['hr.leave.type'].search([('work_entry_type_id.code', '=', 'LEAVE120')], limit=1).id
+            vals = {
+                'name': 'Reconciled Allocation Days',
+                'employee_id': self.employee_id.id,
+                'holiday_status_id': time0ff_type,
+                'allocation_type': 'regular',
+                'number_of_days': self.days_to_reconcile * -1,
+            }
+            allocation = self.env['hr.leave.allocation'].create(vals)
+            allocation.action_approve()
+            allocation.action_validate()
+            self.write({'reconcile_allocation_id': allocation.id})
 
     def open_settlement_journal_entry(self):
         return {

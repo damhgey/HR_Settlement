@@ -50,16 +50,18 @@
                         <button name="open_settlement_journal_entry" type="object"
                                 class="oe_stat_button" icon="fa-paperclip"
                                 string="Journal Entry"
-                                attrs="{'invisible': [('state', 'in', ('draft', 'submit'))]}"
+                                attrs="{'invisible': [('journal_entry_id', '=', False)]}"
                         />
                         <button name="open_settlement_payment" type="object"
                                 class="oe_stat_button" icon="fa-money"
                                 string="Payment"
-                                attrs="{'invisible': [('state', 'in', ('draft', 'submit'))]}"
+                                attrs="{'invisible': [('payment_id', '=', False)]}"
                         />
                     </div>
 
                     <h1>
+                        <field name="journal_entry_id" invisible="1"/>
+                        <field name="payment_id" invisible="1"/>
                         <field name="settlement_code"/>
                     </h1>
                     <group>
@@ -79,6 +81,7 @@
                             <field name="timeoff_balance" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
                             <field name="days_to_reconcile" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
                             <field name="remaining_days" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="reconcile_allocation_id" attrs="{'invisible': [('reconcile_allocation_id', '=', False)]}"/>
                             <field name="show_timeoff_request" invisible="1"/>
                             <field name="show_timeoff_balance" invisible="1"/>
                             <field name="show_both" invisible="1"/>
@@ -90,11 +93,11 @@
                             <field name="total_amount"/>
                         </group>
                         <group string="Approved Info"
-                               attrs="{'invisible': [('state', 'not in', ('hr_approve','finance_approve'))]}">
+                               attrs="{'invisible': [('state', 'not in', ('hr_approve', 'issued', 'paid'))]}">
                             <field name="approved_by"
-                                   attrs="{'required': [('state', 'in', ('hr_approve','finance_approve'))]}"/>
+                                   attrs="{'required': [('state', 'in', ('hr_approve', 'issued', 'paid'))]}"/>
                             <field name="approved_date"
-                                   attrs="{'required': [('state', 'in', ('hr_approve','finance_approve'))]}"/>
+                                   attrs="{'required': [('state', 'in', ('hr_approve', 'issued', 'paid'))]}"/>
                             <field name="note"/>
                         </group>
                     </group>
