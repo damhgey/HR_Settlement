@@ -12,7 +12,7 @@
 
     'version': '0.1',
 
-    'depends': ['base', 'hr', 'hr_contract_update'],
+    'depends': ['base', 'hr', 'hr_holidays', 'account', 'hr_contract_update'],
 
     'data': [
         'security/security.xml',
@@ -20,6 +20,7 @@
         'views/settlement.xml',
         'views/hr_leave_view.xml',
         'views/settlement_journal_config.xml',
+        'views/hr_leave_type.xml',
         'data/hr_settlement_sequence.xml',
         'report/settlement_report.xml',
     ],

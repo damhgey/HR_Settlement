@@ -6,6 +6,8 @@ class HrLeave(models.Model):
 
     is_reconcile = fields.Boolean(string="Is Reconciled")
     settlement_id = fields.Many2one(comodel_name="hr.settlement", string="Settlement", readonly=True)
+    timeoff_type_can_reconcile = fields.Boolean(string="Timeoff Type Can Reconcile",
+                                                related='holiday_status_id.can_reconcile')
 
     def reconcile_timeoff(self):
         self.ensure_one()

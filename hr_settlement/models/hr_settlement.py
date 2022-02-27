@@ -62,13 +62,15 @@ class HrSettlement(models.Model):
                                       states={'draft': [('readonly', False)]}, )
     timeoff_request_days = fields.Float(comodel_name="hr.leave", string="Time Off Request Days",
                                         related='timeoff_request.number_of_days')
-    timeoff_balance = fields.Float(string="Time Off Balance", compute='_compute_timeoff_balance')
+    timeoff_balance = fields.Float(string="Time Off Balance", compute='_compute_timeoff_balance', store=True)
     days_to_reconcile = fields.Float(string="Days To Reconcile", required=False, readonly=True,
                                      states={'draft': [('readonly', False)]})
     remaining_days = fields.Float(string="Remaining Days", compute='_compute_remaining_days')
     show_timeoff_request = fields.Boolean(string="", )
     show_timeoff_balance = fields.Boolean(string="", )
     show_both = fields.Boolean(string="", )
+    settlement_accrual_type = fields.Many2one(comodel_name="settlement.journal.config",
+                                              string="Settlement Accrual Type", required=True, )
 
     # settlement computation
     settlement_days = fields.Float(string="Settlement Days", compute='_compute_settlement_days')
@@ -127,6 +129,7 @@ class HrSettlement(models.Model):
                 'settlement_id': self.id,
                 'active_model': 'account.move',
                 'active_ids': self.journal_entry_id.id,
+                'default_communication': 'Payment For ' + self.settlement_code,
             },
             'target': 'new',
             'type': 'ir.actions.act_window',
@@ -220,17 +223,22 @@ class HrSettlement(models.Model):
             rec.total_amount = sum([rec.leave_amount, rec.ticket_amount])
 
     def prepare_move_data(self):
-        settlement_accounts = self.env['settlement.journal.config'].search([('active_rec', '=', True)], limit=1)
+        settlement_accounts = self.settlement_accrual_type
         if not settlement_accounts:
             raise ValidationError(_("Please set the configuration for settlement journal Entry"))
         else:
             # Prepare Move lines (journal item)
+
+            analytic_account_id = self.contract_id.analytic_account_id.id
+            analytic_tag_ids = self.contract_id.analytic_tag_ids.ids
             line_vals = []
             if self.leave_amount != 0:
                 line_vals.append(
                     {
-                        'name': 'Leave',
+                        'name': 'Leave Amount',
                         'account_id': settlement_accounts.leave_debit_account_id.id,
+                        'analytic_account_id': analytic_account_id,
+                        'analytic_tag_ids': analytic_tag_ids,
                         'partner_id': self.employee_id.address_home_id.id,
                         'debit': self.leave_amount,
                         'credit': 0.0
@@ -238,8 +246,10 @@ class HrSettlement(models.Model):
             if self.ticket_amount != 0:
                 line_vals.append(
                     {
-                        'name': 'Ticket',
+                        'name': 'Travel Ticket Amount',
                         'account_id': settlement_accounts.ticket_debit_account_it.id,
+                        'analytic_account_id': analytic_account_id,
+                        'analytic_tag_ids': analytic_tag_ids,
                         'partner_id': self.employee_id.address_home_id.id,
                         'debit': self.ticket_amount,
                         'credit': 0.0
@@ -247,8 +257,10 @@ class HrSettlement(models.Model):
             if self.total_amount != 0:
                 line_vals.append(
                     {
-                        'name': 'Total',
+                        'name': 'Total Amount',
                         'account_id': settlement_accounts.total_credit_account_id.id,
+                        'analytic_account_id': analytic_account_id,
+                        'analytic_tag_ids': analytic_tag_ids,
                         'partner_id': self.employee_id.address_home_id.id,
                         'debit': 0.0,
                         'credit': self.total_amount

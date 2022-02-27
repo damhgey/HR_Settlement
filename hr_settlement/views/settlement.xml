@@ -72,6 +72,7 @@
                             <field name="company_id"/>
                             <field name="department_id"/>
                             <field name="job_id"/>
+                            <field name="settlement_accrual_type"/>
                         </group>
                         <group String="Settlement Information">
                             <field name="application_date"/>

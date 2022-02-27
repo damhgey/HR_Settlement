@@ -14,23 +14,4 @@ class SettlementJournalConfig(models.Model):
     ticket_debit_account_it = fields.Many2one(comodel_name="account.account", string="Ticket Debit Account",
                                               required=True, )
     total_credit_account_id = fields.Many2one(comodel_name="account.account", string="Total Credit Account",
-                                              required=True, )
-    active_rec = fields.Boolean(string="Active")
-
-    @api.model
-    def create(self, vals):
-        res = super(SettlementJournalConfig, self).create(vals)
-        records = self.env['settlement.journal.config'].search([('id', '!=', res.id)])
-        if vals['active_rec']:
-            for rec in records:
-                rec.write({'active_rec': False})
-        return res
-
-    def write(self, vals):
-        res = super(SettlementJournalConfig, self).write(vals)
-        records = self.env['settlement.journal.config'].search([('id', '!=', self.id)])
-        active_rec = vals.get('active_rec')
-        if active_rec:
-            for rec in records:
-                rec.write({'active_rec': False})
-        return res
+                                              required=True,)
