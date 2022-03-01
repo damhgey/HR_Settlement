@@ -1,0 +1,18 @@
+<odoo>
+    <record id="settlement_view_employee_form" model="ir.ui.view">
+        <field name="name">settlement.view.employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="open_settlement_ids" type="object"
+                        class="oe_stat_button" icon="fa-list-alt"
+                        string="Settlements"
+                        groups="hr_settlement.settlement_manager_group"
+                />
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

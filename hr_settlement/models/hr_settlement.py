@@ -24,7 +24,8 @@ class HrSettlement(models.Model):
             rec.timeoff_request = False
             return {'domain': {
                 'timeoff_request': [('employee_id', '=', rec.employee_id.id), ('is_reconcile', '=', False),
-                                    ('holiday_status_id.work_entry_type_id.code', '=', 'LEAVE120'),
+                                    ('holiday_status_id.can_reconcile', '=', True),
+                                    ('settlement_id', '=', False),
                                     ('state', '=', 'validate')]}}
 
     settlement_code = fields.Char(string="Settlement No", readonly=True, default='Settlement')
@@ -69,8 +70,7 @@ class HrSettlement(models.Model):
     show_timeoff_request = fields.Boolean(string="", )
     show_timeoff_balance = fields.Boolean(string="", )
     show_both = fields.Boolean(string="", )
-    settlement_accrual_type = fields.Many2one(comodel_name="settlement.journal.config",
-                                              string="Settlement Accrual Type", required=True, )
+    settlement_accrual_type = fields.Many2one(comodel_name="settlement.journal.config", string="Settlement Accrual Type")
 
     # settlement computation
     settlement_days = fields.Float(string="Settlement Days", compute='_compute_settlement_days')
@@ -170,7 +170,7 @@ class HrSettlement(models.Model):
         for rec in self:
             paid_timeoff_days = leave_report.search(
                 [('employee_id', '=', rec.employee_id.id),
-                 ('holiday_status_id.work_entry_type_id.code', '=', 'LEAVE120'),
+                 ('holiday_status_id.can_reconcile', '=', True),
                  ('state', '=', 'validate')]).mapped('number_of_days')
             timeoff_balance = sum(paid_timeoff_days)
             if paid_timeoff_days:

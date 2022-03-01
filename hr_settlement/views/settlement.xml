@@ -72,17 +72,24 @@
                             <field name="company_id"/>
                             <field name="department_id"/>
                             <field name="job_id"/>
-                            <field name="settlement_accrual_type"/>
+                            <field name="settlement_accrual_type"
+                                   attrs="{'invisible': [('state', 'not in', ('hr_approve', 'issued', 'paid'))], 'required': [('state', 'in', ('hr_approve', 'issued', 'paid'))], 'readonly': [('state', '!=', 'hr_approve')]}"/>
                         </group>
                         <group String="Settlement Information">
                             <field name="application_date"/>
                             <field name="settlement_for"/>
-                            <field name="timeoff_request" attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
-                            <field name="timeoff_request_days" attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
-                            <field name="timeoff_balance" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
-                            <field name="days_to_reconcile" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
-                            <field name="remaining_days" attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
-                            <field name="reconcile_allocation_id" attrs="{'invisible': [('reconcile_allocation_id', '=', False)]}"/>
+                            <field name="timeoff_request"
+                                   attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="timeoff_request_days"
+                                   attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="timeoff_balance"
+                                   attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="days_to_reconcile"
+                                   attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="remaining_days"
+                                   attrs="{'invisible': [('show_timeoff_balance', '!=', True), ('show_both', '!=', True)]}"/>
+                            <field name="reconcile_allocation_id"
+                                   attrs="{'invisible': [('reconcile_allocation_id', '=', False)]}"/>
                             <field name="show_timeoff_request" invisible="1"/>
                             <field name="show_timeoff_balance" invisible="1"/>
                             <field name="show_both" invisible="1"/>
