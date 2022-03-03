@@ -25,8 +25,18 @@ class HrSettlement(models.Model):
             return {'domain': {
                 'timeoff_request': [('employee_id', '=', rec.employee_id.id), ('is_reconcile', '=', False),
                                     ('holiday_status_id.can_reconcile', '=', True),
-                                    ('settlement_id', '=', False),
+                                     ('settlement_id', '=', False),
                                     ('state', '=', 'validate')]}}
+
+    @api.depends('employee_id')
+    def compute_timeoff_request_domain(self):
+        for rec in self:
+            hr_leave_domain = rec.env['hr.leave'].search([('employee_id', '=', rec.employee_id.id),
+                                                          ('is_reconcile', '=', False),
+                                                          ('holiday_status_id.can_reconcile', '=', True),
+                                                          ('settlement_id', '=', False),
+                                                          ('state', '=', 'validate')]).ids
+            rec.timeoff_request_domain = [(6, 0, hr_leave_domain)]
 
     settlement_code = fields.Char(string="Settlement No", readonly=True, default='Settlement')
     application_date = fields.Date('Application Date', required=True, default=fields.Date.today(), readonly=True,
@@ -87,6 +97,8 @@ class HrSettlement(models.Model):
 
     journal_entry_id = fields.Many2one('account.move', string='Journal Entry')
     payment_id = fields.Many2one('account.payment', string='Payment')
+    # timeoff request domain
+    timeoff_request_domain = fields.Many2many(comodel_name="hr.leave", compute='compute_timeoff_request_domain')
 
     @api.model
     def create(self, vals):
@@ -114,7 +126,7 @@ class HrSettlement(models.Model):
 
         # update timeoff if settlement for balance or both
         if self.settlement_for in ['timeoff_request', 'both'] and self.timeoff_request:
-            self.timeoff_request.write({'is_reconcile': True})
+            self.timeoff_request.write({'is_reconcile': True, 'settlement_id': self.id})
 
         self.state = 'issued'
 

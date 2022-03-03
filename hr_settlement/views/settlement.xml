@@ -78,8 +78,10 @@
                         <group String="Settlement Information">
                             <field name="application_date"/>
                             <field name="settlement_for"/>
+                            <field name="timeoff_request_domain" invisible="1"/>
                             <field name="timeoff_request"
-                                   attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
+                                   attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"
+                                   domain="[('id', 'in', timeoff_request_domain)]"/>
                             <field name="timeoff_request_days"
                                    attrs="{'invisible': [('show_timeoff_request', '!=', True), ('show_both', '!=', True)]}"/>
                             <field name="timeoff_balance"
