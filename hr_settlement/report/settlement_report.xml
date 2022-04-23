@@ -72,13 +72,13 @@
                                     <span t-field="o.settlement_days"/>
                                     <br/>
                                     <strong size="4">Leave Amount:</strong>
-                                    <span t-esc="o.leave_amount"/>
+                                    <span t-esc="o.leave_amount" t-options='{"widget": "float", "precision": 2}'/>
                                     <br/>
                                     <strong size="4">Ticket Amount:</strong>
-                                    <span t-field="o.ticket_amount"/>
+                                    <span t-field="o.ticket_amount" t-options='{"widget": "float", "precision": 2}'/>
                                     <br/>
                                     <strong size="4">Total Amount:</strong>
-                                    <span t-field="o.total_amount"/>
+                                    <span t-field="o.total_amount" t-options='{"widget": "float", "precision": 2}'/>
                                 </div>
                             </div>
                             <br/>
